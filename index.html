@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafik Pendapatan Harian</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: sans-serif; padding: 15px; max-width: 600px; margin: auto; }
+  canvas { background: #f9f9f9; border-radius: 12px; }
+.box { display: flex; gap: 8px; margin-top: 15px; }
+  input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+  button { padding: 12px 18px; background: royalblue; color: white; border: none; border-radius: 8px; font-weight: bold; }
+  #hariIni { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+.hint { font-size: 12px; color: #666; margin: 8px 0; }
+.row { display: flex; gap: 8px; }
+.row button { flex: 1; background: #555; }
+</style>
+</head>
+<body>
+<h3>Grafik Pendapatan Harian</h3>
+<div id="hariIni">Hari ini: Rp400.000</div>
+<canvas id="grafik" height="250"></canvas>
+<div class="hint">Geser pake tombol ◀ ▶ buat lihat hari lama. 1 kotak input aja</div>
+
+<div class="box">
+  <input type="number" id="input" placeholder="Ketik pendapatan hari ini" value="0">
+  <button onclick="update()">Update</button>
+</div>
+<div class="row">
+  <button onclick="geser(-1)">◀ Geser Kiri</button>
+  <button onclick="geser(1)">Geser Kanan ▶</button>
+  
+</div>
+
+<script>
+const labels = ['Hari 0'];
+const dataPendapatan = [400000];
+let offset = 0;
+const windowSize = 10;
+
+const ctx = document.getElementById('grafik');
+const chart = new Chart(ctx, {
+  type: 'bar', // pake bar biar jelas per hari
+  data: {
+    labels: labels.slice(offset, offset + windowSize),
+    datasets: [{
+      label: 'Pendapatan Rp',
+      data: dataPendapatan.slice(offset, offset + windowSize),
+      backgroundColor: 'royalblue',
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    animation: false,
+    scales: {
+      y: { ticks: { callback: v => 'Rp' + v.toLocaleString('id-ID') } }
+    }
+  }
+});
+
+function updateView() {
+  const end = Math.min(offset + windowSize, labels.length);
+  chart.data.labels = labels.slice(offset, end);
+  chart.data.datasets[0].data = dataPendapatan.slice(offset, end);
+  chart.update();
+}
+
+function update() {
+  const val = parseInt(document.getElementById('input').value) || 0;
+
+  labels.push('Hari ' + (labels.length));
+  dataPendapatan.push(val);
+
+  // warna hijau kalau >= 400rb, merah kalau dibawah
+  chart.data.datasets[0].backgroundColor = dataPendapatan.map(v => v >= 400000? '#22c55e' : '#ef4444');
+
+  // auto geser ke hari terbaru
+  offset = Math.max(0, labels.length - windowSize);
+  updateView();
+
+  document.getElementById('hariIni').textContent = 'Hari ini: Rp' + val.toLocaleString('id-ID');
+  document.getElementById('input').value = 0;
+}
+
+function geser(arah) {
+  offset += arah;
+  if(offset < 0) offset = 0;
+  if(offset > labels.length - windowSize) offset = Math.max(0, labels.length - windowSize);
+  updateView();
+}
+
+function resetView() {
+  offset = Math.max(0, labels.length - windowSize);
+  updateView();
+}
+
+document.getElementById('input').addEventListener('keypress', e => {
+  if(e.key === 'Enter') update();
+});
+</script>
+</body>
+</html>
