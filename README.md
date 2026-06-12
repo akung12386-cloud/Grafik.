@@ -1,0 +1,2 @@
+# Grafik.
+Grafik pendapatan
